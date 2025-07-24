@@ -1,0 +1,9 @@
+ccxt
+pandas 
+matplotlib 
+sqlalchemy 
+python-dotenv
+pymysql
+numpy
+fastapi
+uvicorn

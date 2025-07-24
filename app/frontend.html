@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crypto Trading Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #1e293b;
+            --secondary: #334155;
+            --accent: #38bdf8;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --success: #22c55e;
+            --danger: #ef4444;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
+        header {
+            background: var(--primary);
+            padding: 24px 0 16px 0;
+            text-align: center;
+            box-shadow: 0 2px 8px #0002;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent);
+        }
+        .dashboard {
+            max-width: 900px;
+            margin: 32px auto;
+            padding: 0 16px;
+        }
+        .cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            box-shadow: 0 4px 24px #0003;
+            padding: 24px 32px;
+            flex: 1 1 220px;
+            min-width: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        .card-title {
+            font-size: 1rem;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+        .card-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        #crawl-btn {
+            background: var(--accent);
+            color: var(--primary);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 32px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 2px 8px #38bdf855;
+            transition: background 0.2s, transform 0.2s;
+            margin-bottom: 16px;
+        }
+        #crawl-btn:hover {
+            background: #0ea5e9;
+            transform: translateY(-2px) scale(1.04);
+        }
+        #status {
+            min-height: 24px;
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+        #chart-container {
+            background: var(--card);
+            border-radius: 16px;
+            box-shadow: 0 4px 24px #0003;
+            padding: 24px 16px 8px 16px;
+            margin-top: 16px;
+        }
+        @media (max-width: 700px) {
+            .dashboard { padding: 0 4px; }
+            .cards { flex-direction: column; gap: 12px; }
+            .card { padding: 16px 12px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Crypto Trading Dashboard</h1>
+    </header>
+    <div class="dashboard">
+        <div class="cards">
+            <div class="card">
+                <div class="card-title">Số lượng bản ghi</div>
+                <div class="card-value" id="record-count">-</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Thời gian cập nhật</div>
+                <div class="card-value" id="last-update">-</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Trạng thái</div>
+                <div class="card-value" id="status">-</div>
+            </div>
+        </div>
+        <button id="crawl-btn">Crawl dữ liệu</button>
+        <div id="chart-container">
+            <canvas id="priceChart"></canvas>
+        </div>
+    </div>
+    <script>
+        const apiBase = "http://localhost:8000";
+        const crawlBtn = document.getElementById('crawl-btn');
+        const statusDiv = document.getElementById('status');
+        const recordCountDiv = document.getElementById('record-count');
+        const lastUpdateDiv = document.getElementById('last-update');
+        let chart;
+
+        crawlBtn.onclick = async () => {
+            setStatus("Đang crawl dữ liệu...", 'info');
+            try {
+                const res = await fetch(apiBase + "/crawl", { method: "POST" });
+                const data = await res.json();
+                setStatus(data.message || "Đã crawl xong!", 'success');
+                await loadAndDraw();
+            } catch (e) {
+                setStatus("Lỗi crawl dữ liệu!", 'danger');
+            }
+        };
+
+        async function loadAndDraw() {
+            setStatus("Đang tải dữ liệu biểu đồ...", 'info');
+            try {
+                const res = await fetch(apiBase + "/price");
+                const data = await res.json();
+                if (!Array.isArray(data) || data.length === 0) {
+                    setStatus("Không có dữ liệu để vẽ.", 'danger');
+                    recordCountDiv.textContent = '0';
+                    lastUpdateDiv.textContent = '-';
+                    drawChart([], []);
+                    return;
+                }
+                recordCountDiv.textContent = data.length;
+                lastUpdateDiv.textContent = new Date(data[data.length-1].timestamp).toLocaleString();
+                setStatus("Đã vẽ biểu đồ.", 'success');
+                const labels = data.map(item => new Date(item.timestamp).toLocaleString());
+                const prices = data.map(item => item.price);
+                drawChart(labels, prices);
+            } catch (e) {
+                setStatus("Lỗi tải dữ liệu!", 'danger');
+            }
+        }
+
+        function setStatus(msg, type) {
+            statusDiv.textContent = msg;
+            if(type === 'success') statusDiv.style.color = 'var(--success)';
+            else if(type === 'danger') statusDiv.style.color = 'var(--danger)';
+            else statusDiv.style.color = 'var(--accent)';
+        }
+
+        function drawChart(labels, prices) {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Giá trung bình (Price)',
+                        data: prices,
+                        borderColor: '#38bdf8',
+                        backgroundColor: 'rgba(56,189,248,0.1)',
+                        fill: true,
+                        tension: 0.2,
+                        pointRadius: 2,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true, labels: { color: '#f1f5f9', font: { weight: 'bold' } } }
+                    },
+                    scales: {
+                        x: { display: true, title: { display: true, text: 'Thời gian', color: '#f1f5f9' }, ticks: { color: '#f1f5f9' } },
+                        y: { display: true, title: { display: true, text: 'Giá', color: '#f1f5f9' }, ticks: { color: '#f1f5f9' } }
+                    }
+                }
+            });
+        }
+
+        // Tải dữ liệu và vẽ biểu đồ khi mở trang
+        loadAndDraw();
+        // Tự động cập nhật mỗi 1 phút
+        setInterval(loadAndDraw, 60000);
+    </script>
+</body>
+</html> 

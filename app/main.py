@@ -1,0 +1,58 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import List
+from app.database import get_db, OHLCV, Price, Trade, Base, engine
+from app import crawler
+from sqlalchemy.orm import Session
+from datetime import datetime
+
+app = FastAPI()
+
+# Cho phép CORS cho frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Tạo bảng nếu chưa có
+Base.metadata.create_all(bind=engine)
+
+class OHLCVSchema(BaseModel):
+    timestamp: datetime
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+    timeframe: str
+    class Config:
+        orm_mode = True
+
+class PriceSchema(BaseModel):
+    timestamp: datetime
+    price: float
+    class Config:
+        orm_mode = True
+
+@app.post("/crawl")
+def crawl_data():
+    crawler.fetch_ohlcv(0)
+    crawler.fetch_trades(0)
+    crawler.fetch_price(0)
+    return {"message": "Crawl thành công"}
+
+@app.get("/ohlcv", response_model=List[OHLCVSchema])
+def get_ohlcv():
+    db = next(get_db())
+    data = db.query(OHLCV).order_by(OHLCV.timestamp).all()
+    return data
+
+@app.get("/price", response_model=List[PriceSchema])
+def get_price():
+    db = next(get_db())
+    data = db.query(Price).order_by(Price.timestamp).all()
+    return data 
