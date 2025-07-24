@@ -31,13 +31,13 @@ class OHLCVSchema(BaseModel):
     volume: float
     timeframe: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class PriceSchema(BaseModel):
     timestamp: datetime
     price: float
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 @app.post("/crawl")
 def crawl_data():
