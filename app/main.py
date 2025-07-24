@@ -53,11 +53,11 @@ def root():
 @app.get("/ohlcv", response_model=List[OHLCVSchema])
 def get_ohlcv():
     db = next(get_db())
-    data = db.query(OHLCV).order_by(OHLCV.timestamp).all()
+    data = db.query(OHLCV).order_by(OHLCV.timestamp.desc()).limit(50).all()
     return data
 
 @app.get("/price", response_model=List[PriceSchema])
 def get_price():
     db = next(get_db())
-    data = db.query(Price).order_by(Price.timestamp).all()
+    data = db.query(Price).order_by(Price.timestamp.desc()).limit(50).all()
     return data 
