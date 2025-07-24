@@ -2,7 +2,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import Column, Integer, String, Float, DateTime, BigInteger
 
-DB_URL = "sqlite:///app.db"
+# Lưu database vào thư mục /tmp để đảm bảo quyền ghi trên Render
+DB_URL = "sqlite:////tmp/app.db"
 engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -52,4 +53,4 @@ def get_db():
 
 if __name__ == "__main__":
     #  Base.metadata.drop_all(bind=engine)
-     Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
