@@ -7,3 +7,4 @@ pymysql
 numpy
 fastapi
 uvicorn
+psycopg2-binary

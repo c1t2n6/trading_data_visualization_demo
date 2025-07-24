@@ -1,10 +1,14 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import Column, Integer, String, Float, DateTime, BigInteger
+import os
 
-# Lưu database vào thư mục /tmp để đảm bảo quyền ghi trên Render
-DB_URL = "sqlite:////tmp/app.db"
-engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
+# Kết nối PostgreSQL, tên database là asto_usdt
+DB_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+psycopg2://user:password@localhost:5432/asto_usdt"
+)
+engine = create_engine(DB_URL, echo=True)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
