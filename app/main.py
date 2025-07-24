@@ -6,6 +6,7 @@ from app.database import get_db, OHLCV, Price, Trade, Base, engine
 from app import crawler
 from sqlalchemy.orm import Session
 from datetime import datetime
+from fastapi.responses import FileResponse
 
 app = FastAPI()
 
@@ -44,6 +45,10 @@ def crawl_data():
     crawler.fetch_trades(0)
     crawler.fetch_price(0)
     return {"message": "Crawl thành công"}
+
+@app.get("/")
+def root():
+    return FileResponse("app/frontend.html")
 
 @app.get("/ohlcv", response_model=List[OHLCVSchema])
 def get_ohlcv():
