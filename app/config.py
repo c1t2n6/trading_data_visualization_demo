@@ -1,5 +1,5 @@
 import ccxt
 EXCHANGE = ccxt.mexc()
-SYMBOL = 'ASTO/USDT'
+SYMBOL = 'BTC/USDT'
 TIMEFRAME = '1m'
 GAP = 1

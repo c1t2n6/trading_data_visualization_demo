@@ -74,6 +74,7 @@ def fetch_price(upd: bool):
     until = int(datetime.now(timezone.utc).timestamp()) * 1000
     try: 
         ohlcv = EXCHANGE.fetch_ohlcv(SYMBOL, timeframe=TIMEFRAME, since = since, params={'until': until})
+        print(f"Fetched {len(ohlcv)} candles for {SYMBOL}")
         for candle in ohlcv:
             ts = datetime.fromisoformat(EXCHANGE.iso8601(candle[0]).replace("Z", "+00:00"))
             high = candle[2]
