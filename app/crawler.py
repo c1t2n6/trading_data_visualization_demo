@@ -67,7 +67,7 @@ def fetch_trades(upd: bool):
 def fetch_price(upd: bool):
     db = next(get_db())
     try:
-        ohlcv = EXCHANGE.fetch_ohlcv(SYMBOL, timeframe=TIMEFRAME, limit=1)
+        ohlcv = EXCHANGE.fetch_ohlcv(SYMBOL, timeframe=TIMEFRAME, limit=50)
         print(f"Fetched {len(ohlcv)} candles for {SYMBOL}")
         now_utc = datetime.now(timezone.utc)
         for candle in ohlcv:
