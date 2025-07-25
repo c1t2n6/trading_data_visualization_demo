@@ -66,17 +66,16 @@ def fetch_trades(upd: bool):
 
 def fetch_price(upd: bool):
     db = next(get_db())
-    if (upd == False): 
-        period = datetime.now(timezone.utc) - timedelta(days=7)
-    else: 
-        period = datetime.now(timezone.utc) - timedelta(minutes=GAP)        
-    since = int(period.timestamp() * 1000)
-    until = int(datetime.now(timezone.utc).timestamp()) * 1000
-    try: 
-        ohlcv = EXCHANGE.fetch_ohlcv(SYMBOL, timeframe=TIMEFRAME, since = since, params={'until': until})
+    try:
+        ohlcv = EXCHANGE.fetch_ohlcv(SYMBOL, timeframe=TIMEFRAME, limit=1)
         print(f"Fetched {len(ohlcv)} candles for {SYMBOL}")
+        now_utc = datetime.now(timezone.utc)
         for candle in ohlcv:
             ts = datetime.fromisoformat(EXCHANGE.iso8601(candle[0]).replace("Z", "+00:00"))
+            print(f"Candle timestamp: {ts}, Now: {now_utc}")
+            if ts > now_utc:
+                print(f"Skip future candle: {ts}")
+                continue
             high = candle[2]
             low = candle[3]
             record = Price(
