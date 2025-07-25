@@ -59,5 +59,6 @@ def get_ohlcv():
 @app.get("/price", response_model=List[PriceSchema])
 def get_price():
     db = next(get_db())
-    data = db.query(Price).order_by(Price.timestamp.asc()).limit(50).all()
+    # Lấy 50 bản ghi mới nhất, sau đó đảo ngược để tăng dần theo thời gian
+    data = db.query(Price).order_by(Price.timestamp.desc()).limit(50).all()[::-1]
     return data 

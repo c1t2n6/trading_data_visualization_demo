@@ -76,6 +76,9 @@ def fetch_price(upd: bool):
             if ts > now_utc:
                 print(f"Skip future candle: {ts}")
                 continue
+            # Kiểm tra đã có timestamp này trong DB chưa
+            if db.query(Price).filter(Price.timestamp == ts).first():
+                continue  # Đã có rồi, bỏ qua
             high = candle[2]
             low = candle[3]
             record = Price(
